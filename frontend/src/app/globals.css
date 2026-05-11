@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #5C4033;
+  --color-secondary: #F5F1EC;
+  --color-accent: #C69C72;
+  --color-accent-light: #E7D7C9;
+  --color-accent-dark: #6F4E37;
+  --color-surface: #E7D7C9;
+  --color-surface-dark: #9C6B4F;
+  --color-muted: #8B6B52;
+  --color-border: #E7D7C9;
+  --color-border-dark: #8B6B52;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-secondary text-primary font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply bg-[#9C6B4F] text-white rounded-full px-8 py-3.5 font-sans font-medium text-sm uppercase tracking-widest hover:bg-[#6F4E37] hover:shadow-md transition-all duration-300 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent text-primary border border-primary rounded-full px-8 py-3.5 font-sans font-medium text-sm uppercase tracking-widest hover:bg-primary hover:text-white transition-all duration-300 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-accent {
+    @apply bg-accent text-white rounded-full px-8 py-3.5 font-sans font-medium text-sm uppercase tracking-widest hover:bg-accent-dark hover:shadow-md transition-all duration-300 inline-flex items-center justify-center gap-2;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-border bg-white rounded-xl text-primary font-sans text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted/70 transition-all duration-200;
+  }
+
+  .section-heading {
+    @apply font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-primary;
+  }
+
+  .section-subheading {
+    @apply font-sans text-sm uppercase tracking-[0.2em] text-muted;
+  }
+
+  .card-hover {
+    @apply transition-all duration-500 hover:shadow-md hover:-translate-y-1;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 rounded-2xl shadow-sm;
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #C69C72 0%, #E7D7C9 50%, #C69C72 100%);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #5C4033 0%, #8B6B52 100%);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #F5F1EC 25%, #E7D7C9 50%, #F5F1EC 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Page transition */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s;
+}
