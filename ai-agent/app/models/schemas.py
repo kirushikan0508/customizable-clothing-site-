@@ -5,6 +5,7 @@ from typing import List, Optional, Any, Dict
 class ChatRequest(BaseModel):
     session_id: str
     message: str
+    auth_token: Optional[str] = None
 
 class ChatResponse(BaseModel):
     message: str
@@ -17,6 +18,7 @@ class AgentContext(BaseModel):
     session_id: str
     message: str
     memory: Dict[str, Any]
+    auth_token: Optional[str] = None
 
 class AgentResult(BaseModel):
     response_message: str

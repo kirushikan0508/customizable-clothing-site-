@@ -23,7 +23,7 @@ class ProductSearchAgent:
             query_params = filters.model_dump(exclude_none=True)
             
             # Call Express API
-            products = await express_client.get_products(filters=query_params)
+            products = await express_client.get_products(filters=query_params, auth_token=context.auth_token)
             
             # Formulate response
             if products and isinstance(products, list) and len(products) > 0:

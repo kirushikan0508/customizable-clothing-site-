@@ -7,7 +7,7 @@ from app.services.express_client import express_client
 class RemoveCartAgent:
     async def process(self, context: AgentContext) -> AgentResult:
         # First, fetch the current cart to know what can be removed
-        cart_data = await express_client.get_cart()
+        cart_data = await express_client.get_cart(auth_token=context.auth_token)
         items = cart_data.get("items", [])
         
         if not items:
@@ -34,7 +34,7 @@ class RemoveCartAgent:
                     action_taken="ambiguous_reference"
                 )
                 
-            response = await express_client.remove_from_cart(resolution.item_id)
+            response = await express_client.remove_from_cart(resolution.item_id, auth_token=context.auth_token)
             
             if "error" not in response:
                 return AgentResult(

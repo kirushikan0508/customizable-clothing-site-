@@ -10,27 +10,34 @@ class ExpressClient:
         self.base_url = settings.express_api_base_url
         self.timeout = 10.0
 
-    async def get_products(self, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    def _get_headers(self, auth_token: Optional[str] = None) -> Dict[str, str]:
+        headers = {}
+        if auth_token:
+            headers["Authorization"] = f"Bearer {auth_token}"
+        return headers
+
+    async def get_products(self, filters: Dict[str, Any] = None, auth_token: Optional[str] = None) -> List[Dict[str, Any]]:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     f"{self.base_url}/products", 
                     params=filters, 
+                    headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
-                # Assuming standard response format: {"success": True, "data": [...]} or just [...]
                 data = response.json()
                 return data.get("data", data) if isinstance(data, dict) else data
             except Exception as e:
                 logger.error(f"Error fetching products: {e}")
                 return []
 
-    async def get_product_by_id(self, product_id: str) -> Optional[Dict[str, Any]]:
+    async def get_product_by_id(self, product_id: str, auth_token: Optional[str] = None) -> Optional[Dict[str, Any]]:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     f"{self.base_url}/products/{product_id}", 
+                    headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
@@ -40,12 +47,12 @@ class ExpressClient:
                 logger.error(f"Error fetching product details: {e}")
                 return None
 
-    async def get_cart(self) -> Dict[str, Any]:
-        # Typically requires user auth, assuming default/test cart for now or mock API
+    async def get_cart(self, auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     f"{self.base_url}/cart", 
+                    headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
@@ -54,13 +61,14 @@ class ExpressClient:
                 logger.error(f"Error fetching cart: {e}")
                 return {"items": [], "totalPrice": 0}
 
-    async def add_to_cart(self, product_id: str, quantity: int = 1) -> Dict[str, Any]:
+    async def add_to_cart(self, product_id: str, quantity: int = 1, auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
                 payload = {"productId": product_id, "quantity": quantity}
                 response = await client.post(
                     f"{self.base_url}/cart/add", 
                     json=payload, 
+                    headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
@@ -69,11 +77,12 @@ class ExpressClient:
                 logger.error(f"Error adding to cart: {e}")
                 return {"error": str(e)}
 
-    async def remove_from_cart(self, item_id: str) -> Dict[str, Any]:
+    async def remove_from_cart(self, item_id: str, auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.delete(
                     f"{self.base_url}/cart/remove/{item_id}", 
+                    headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
@@ -82,12 +91,13 @@ class ExpressClient:
                 logger.error(f"Error removing from cart: {e}")
                 return {"error": str(e)}
 
-    async def create_order(self, order_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_order(self, order_data: Dict[str, Any], auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
                     f"{self.base_url}/orders/create", 
                     json=order_data, 
+                    headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()

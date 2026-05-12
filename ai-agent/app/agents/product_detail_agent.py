@@ -39,7 +39,7 @@ class ProductDetailAgent:
                 )
                 
             # Fetch details
-            product = await express_client.get_product_by_id(resolution.product_id)
+            product = await express_client.get_product_by_id(resolution.product_id, auth_token=context.auth_token)
             
             if product:
                 # Generate a conversational summary of the product

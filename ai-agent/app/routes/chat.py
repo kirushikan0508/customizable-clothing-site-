@@ -15,7 +15,8 @@ async def chat_endpoint(request: ChatRequest):
         context = AgentContext(
             session_id=request.session_id,
             message=request.message,
-            memory=memory
+            memory=memory,
+            auth_token=request.auth_token
         )
         
         # 3. Process via Orchestrator

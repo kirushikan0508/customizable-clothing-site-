@@ -5,7 +5,7 @@ from app.services.gemini_service import gemini_service
 class GetCartAgent:
     async def process(self, context: AgentContext) -> AgentResult:
         try:
-            cart_data = await express_client.get_cart()
+            cart_data = await express_client.get_cart(auth_token=context.auth_token)
             
             if not cart_data.get("items"):
                 return AgentResult(

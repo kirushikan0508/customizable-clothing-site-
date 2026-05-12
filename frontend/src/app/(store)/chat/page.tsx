@@ -4,12 +4,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, User, Bot, Sparkles, X, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import ProductCard from "@/components/ui/ProductCard";
 
 interface Message {
   id: string;
   role: "user" | "agent";
   content: string;
   timestamp: Date;
+  data?: any;
 }
 
 export default function ChatPage() {
@@ -23,7 +25,18 @@ export default function ChatPage() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Generate or retrieve session ID
+    let currentSession = sessionStorage.getItem("chatSessionId");
+    if (!currentSession) {
+      currentSession = "session_" + Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem("chatSessionId", currentSession);
+    }
+    setSessionId(currentSession);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,14 +46,15 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
+    const userMessageContent = inputMessage.trim();
     const newUserMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: inputMessage.trim(),
+      content: userMessageContent,
       timestamp: new Date(),
     };
 
@@ -48,17 +62,48 @@ export default function ChatPage() {
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate agent response for frontend mockup
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem("accessToken") || undefined;
+      
+      const response = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          message: userMessageContent,
+          auth_token: token
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to connect to AI agent.");
+      }
+
+      const data = await response.json();
+      
       const agentResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: "agent",
-        content: "That sounds like a great choice! I can certainly help you find something that matches that style. Let me check our latest collections for you.",
+        content: data.message,
+        timestamp: new Date(),
+        data: data.data
+      };
+      
+      setMessages((prev) => [...prev, agentResponse]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "agent",
+        content: "I'm having trouble connecting right now. Please try again later.",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, agentResponse]);
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -101,8 +146,8 @@ export default function ChatPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   key={message.id}
-                  className={`flex ${
-                    message.role === "user" ? "justify-end" : "justify-start"
+                  className={`flex flex-col ${
+                    message.role === "user" ? "items-end" : "items-start"
                   }`}
                 >
                   <div
@@ -129,7 +174,7 @@ export default function ChatPage() {
                           : "rounded-tl-none bg-white text-neutral-800 ring-1 ring-neutral-200"
                       }`}
                     >
-                      <p className="text-[15px] leading-relaxed">{message.content}</p>
+                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
                       <span
                         className={`mt-2 block text-xs font-medium ${
                           message.role === "user" ? "text-neutral-400" : "text-neutral-400"
@@ -142,6 +187,33 @@ export default function ChatPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Render Products Data if present */}
+                  {message.data?.products && message.data.products.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 pl-11 w-full max-w-[90%]">
+                      {message.data.products.slice(0, 3).map((product: any, idx: number) => (
+                        <div key={product._id || idx} className="w-full">
+                           <ProductCard product={product} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Render Cart Data if present */}
+                  {message.data?.cart_response && (
+                    <div className="mt-2 pl-11">
+                       <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                         Cart updated successfully
+                       </span>
+                    </div>
+                  )}
+                  {message.data?.order && (
+                    <div className="mt-2 pl-11">
+                       <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                         Order confirmed! ID: {message.data.order._id || "processing"}
+                       </span>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

@@ -33,7 +33,7 @@ class AddToCartAgent:
                     action_taken="ambiguous_reference"
                 )
                 
-            response = await express_client.add_to_cart(resolution.product_id, resolution.quantity)
+            response = await express_client.add_to_cart(resolution.product_id, resolution.quantity, auth_token=context.auth_token)
             
             if "error" not in response:
                 return AgentResult(

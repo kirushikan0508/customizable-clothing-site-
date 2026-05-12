@@ -29,7 +29,7 @@ class CheckoutAgent:
                 
             # Create order
             order_payload = {"address": details.address}
-            response = await express_client.create_order(order_payload)
+            response = await express_client.create_order(order_payload, auth_token=context.auth_token)
             
             if "error" not in response:
                 return AgentResult(
