@@ -7,7 +7,7 @@ interface CartState {
   cart: ICart | null;
   isLoading: boolean;
   fetchCart: () => Promise<void>;
-  addToCart: (productId: string, quantity: number, size: string, color?: string) => Promise<void>;
+  addToCart: (productId: string, quantity: number, size: string, color?: string, customization?: any, customPrice?: number) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -32,10 +32,10 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      addToCart: async (productId, quantity, size, color) => {
+      addToCart: async (productId, quantity, size, color, customization, customPrice) => {
         set({ isLoading: true });
         try {
-          const { data } = await api.post("/cart", { productId, quantity, size, color });
+          const { data } = await api.post("/cart", { productId, quantity, size, color, customization, customPrice });
           set({ cart: data.cart, isLoading: false });
         } catch (error) {
           set({ isLoading: false });

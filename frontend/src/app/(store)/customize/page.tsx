@@ -1,9 +1,13 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingBag, Sparkles, Eye, Maximize2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, Sparkles, Eye, Maximize2, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import api from "@/lib/axios";
 import CustomizerSidebar from "@/components/customizer/CustomizerSidebar";
 import CustomizerCanvas from "@/components/customizer/CustomizerCanvas";
 import TShirtPreview from "@/components/customizer/TShirtPreview";
@@ -52,6 +56,35 @@ export default function CustomizePage() {
   const [tshirtType, setTshirtType] = useState("Round Neck");
   const [tshirtSize, setTshirtSize] = useState("M");
 
+  const [baseProduct, setBaseProduct] = useState<any>(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  const { addToCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
+  // Find a suitable base product (Plain T-Shirt)
+  useEffect(() => {
+    const fetchBaseProduct = async () => {
+      try {
+        // Use search instead of category slug to avoid ObjectId cast errors
+        const { data } = await api.get("/products?search=Plain&limit=1");
+        if (data.products && data.products.length > 0) {
+          setBaseProduct(data.products[0]);
+        } else {
+          // Ultimate fallback: just get any active product to use as base
+          const { data: fallbackData } = await api.get("/products?limit=1");
+          if (fallbackData.products && fallbackData.products.length > 0) {
+            setBaseProduct(fallbackData.products[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching base product:", error);
+      }
+    };
+    fetchBaseProduct();
+  }, []);
+
   // Get/set current side design based on view
   const current = view === "front" ? frontDesign : backDesign;
   const setCurrent = view === "front" ? setFrontDesign : setBackDesign;
@@ -89,8 +122,67 @@ export default function CustomizePage() {
     toast.success("Text removed");
   }, [setCurrent]);
 
-  const handleAddToCart = () => {
-    toast.success("Custom T-Shirt added to cart!", { icon: "🎉" });
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add to cart");
+      return;
+    }
+
+    if (!baseProduct) {
+      toast.error("Base product not found. Please try again later.");
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      const customization = {
+        front: {
+          image: frontDesign.image,
+          text: frontDesign.text,
+          details: {
+            imagePosition: frontDesign.imagePosition,
+            imageRotation: frontDesign.imageRotation,
+            imageScale: frontDesign.imageScale,
+            textPosition: frontDesign.textPosition,
+            fontFamily: frontDesign.fontFamily,
+            fontSize: frontDesign.fontSize,
+            textColor: frontDesign.textColor,
+          }
+        },
+        back: {
+          image: backDesign.image,
+          text: backDesign.text,
+          details: {
+            imagePosition: backDesign.imagePosition,
+            imageRotation: backDesign.imageRotation,
+            imageScale: backDesign.imageScale,
+            textPosition: backDesign.textPosition,
+            fontFamily: backDesign.fontFamily,
+            fontSize: backDesign.fontSize,
+            textColor: backDesign.textColor,
+          }
+        },
+        isCustom: true,
+        tshirtType,
+      };
+
+      await addToCart(
+        baseProduct._id,
+        1,
+        tshirtSize,
+        colorNames[tshirtColor] || tshirtColor,
+        customization,
+        totalPrice
+      );
+
+      toast.success("Custom T-Shirt added to cart!", { icon: "🎉" });
+      router.push("/cart");
+    } catch (error) {
+      console.error("Add to cart error:", error);
+      toast.error("Failed to add to cart");
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const hasCustomization = frontDesign.image || frontDesign.text || backDesign.image || backDesign.text;
@@ -279,10 +371,15 @@ export default function CustomizePage() {
 
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-[#9C6B4F] hover:bg-[#6F4E37] text-white rounded-full py-3.5 font-semibold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-lg active:scale-[0.98]"
+                  disabled={isAddingToCart}
+                  className="w-full bg-[#9C6B4F] hover:bg-[#6F4E37] text-white rounded-full py-3.5 font-semibold text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <ShoppingBag size={18} />
-                  Add to Cart
+                  {isAddingToCart ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <ShoppingBag size={18} />
+                  )}
+                  {isAddingToCart ? "Adding..." : "Add to Cart"}
                 </button>
               </div>
             </div>
