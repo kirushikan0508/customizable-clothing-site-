@@ -36,8 +36,10 @@ class AddToCartAgent:
             response = await express_client.add_to_cart(resolution.product_id, resolution.quantity, auth_token=context.auth_token)
             
             if "error" not in response:
+                success_instruction = "Politely confirm that the item was successfully added to the cart."
+                response_msg = gemini_service.generate_content("Item added successfully.", success_instruction)
                 return AgentResult(
-                    response_message="I've added that to your cart!",
+                    response_message=response_msg,
                     data={"cart_response": response},
                     action_taken="add_to_cart"
                 )

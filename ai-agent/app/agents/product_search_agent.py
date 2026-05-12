@@ -27,8 +27,10 @@ class ProductSearchAgent:
             
             # Formulate response
             if products and isinstance(products, list) and len(products) > 0:
-                # Format a nice message
-                response_msg = f"I found {len(products)} products matching your search."
+                # Use Gemini to format a conversational response based on the products found
+                format_instruction = "You are a helpful shopping assistant. Briefly summarize the products found in a friendly, conversational way. Do not list all details, just give a nice intro."
+                response_msg = gemini_service.generate_content(f"Found {len(products)} products. Data: {products[:3]}", format_instruction)
+                
                 # Store in memory for future reference
                 update_memory = {"last_products_shown": products}
                 return AgentResult(
@@ -38,8 +40,10 @@ class ProductSearchAgent:
                     action_taken="search_products"
                 )
             else:
+                not_found_instruction = "Politely inform the user that no products matched their search criteria and suggest they try something else."
+                response_msg = gemini_service.generate_content(context.message, not_found_instruction)
                 return AgentResult(
-                    response_message="I couldn't find any products matching your exact criteria. Could you try adjusting your search?",
+                    response_message=response_msg,
                     data={"products": []},
                     action_taken="search_products"
                 )

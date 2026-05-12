@@ -32,8 +32,10 @@ class CheckoutAgent:
             response = await express_client.create_order(order_payload, auth_token=context.auth_token)
             
             if "error" not in response:
+                success_instruction = "Politely confirm that the order has been placed successfully and express gratitude."
+                response_msg = gemini_service.generate_content("Order placed successfully.", success_instruction)
                 return AgentResult(
-                    response_message="Success! Your order has been placed successfully.",
+                    response_message=response_msg,
                     data={"order": response},
                     action_taken="checkout_complete"
                 )

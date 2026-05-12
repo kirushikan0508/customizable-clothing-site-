@@ -37,8 +37,10 @@ class RemoveCartAgent:
             response = await express_client.remove_from_cart(resolution.item_id, auth_token=context.auth_token)
             
             if "error" not in response:
+                success_instruction = "Politely confirm that the item was successfully removed from the cart."
+                response_msg = gemini_service.generate_content("Item removed successfully.", success_instruction)
                 return AgentResult(
-                    response_message="I've removed that item from your cart.",
+                    response_message=response_msg,
                     data={"cart_response": response},
                     action_taken="remove_from_cart"
                 )

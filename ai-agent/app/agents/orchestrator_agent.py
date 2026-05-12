@@ -42,7 +42,11 @@ class OrchestratorAgent:
                 return await checkout_agent.process(context)
             else:
                 # Handle general chit-chat
-                chat_instruction = "You are a helpful AI fashion assistant. Respond politely to general conversation."
+                chat_instruction = """
+                You are a strict e-commerce shopping assistant for this store.
+                CRITICAL RULE: You MUST ONLY answer questions related to the store's products, cart, checkout, and shopping experience.
+                If the user asks ANY question outside of this scope (general knowledge, coding, history, weather, etc.), you MUST politely refuse and state that you can only assist with shopping from our catalog. Do not try to provide general answers.
+                """
                 response = gemini_service.generate_content(context.message, chat_instruction)
                 return AgentResult(
                     response_message=response,
