@@ -6,6 +6,7 @@ from .add_to_cart_agent import add_to_cart_agent
 from .remove_cart_agent import remove_cart_agent
 from .get_cart_agent import get_cart_agent
 from .checkout_agent import checkout_agent
+from .data_aware_general_agent import data_aware_general_agent
 
 class OrchestratorAgent:
     async def process(self, context: AgentContext) -> AgentResult:
@@ -41,17 +42,9 @@ class OrchestratorAgent:
             elif intent == 'checkout':
                 return await checkout_agent.process(context)
             else:
-                # Handle general chit-chat
-                chat_instruction = """
-                You are a strict e-commerce shopping assistant for this store.
-                CRITICAL RULE: You MUST ONLY answer questions related to the store's products, cart, checkout, and shopping experience.
-                If the user asks ANY question outside of this scope (general knowledge, coding, history, weather, etc.), you MUST politely refuse and state that you can only assist with shopping from our catalog. Do not try to provide general answers.
-                """
-                response = gemini_service.generate_content(context.message, chat_instruction)
-                return AgentResult(
-                    response_message=response,
-                    action_taken="general_chat"
-                )
+                # Use data-aware agent - queries MongoDB before responding
+                # This ensures NO general knowledge fallback from Gemini
+                return await data_aware_general_agent.process(context)
                 
         except Exception as e:
             return AgentResult(

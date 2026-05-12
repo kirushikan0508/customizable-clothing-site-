@@ -8,6 +8,18 @@ class AddToCartAgent:
     async def process(self, context: AgentContext) -> AgentResult:
         last_products = context.memory.get("last_products_shown", [])
         
+        # If no last products, try a quick search based on the message
+        if not last_products:
+            from app.services.mongodb_service import mongodb_service
+            # Extract potential product from message
+            extract_instruction = "Extract the specific clothing item the user wants to add (e.g., 'blue tshirt', 'red hoodie'). Return ONLY the item name."
+            topic = gemini_service.generate_content(context.message, extract_instruction).strip()
+            
+            if topic and topic != "NONE":
+                last_products = mongodb_service.search_products({'keyword': topic})
+                # Update context memory for this turn
+                context.memory["last_products_shown"] = last_products
+
         if not last_products:
             return AgentResult(
                 response_message="I'm not sure which item you want to add. Please search for a product first.",
@@ -17,7 +29,8 @@ class AddToCartAgent:
         system_instruction = f"""
         You are an Add-to-Cart assistant. The user wants to add an item to their cart.
         Recent products shown: {last_products}
-        Identify the product ID and quantity from the user's message.
+        Identify the product ID and quantity from the user's message: '{context.message}'
+        If multiple products could match, pick the most relevant one.
         """
         
         class CartItemResolution(BaseModel):
