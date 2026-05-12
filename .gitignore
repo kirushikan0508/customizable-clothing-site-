@@ -37,3 +37,12 @@ coverage/
 
 # Next.js telemetry
 .next/cache
+
+# Python / AI Agent
+ai-agent/.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
