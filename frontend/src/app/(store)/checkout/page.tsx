@@ -12,7 +12,7 @@ import { formatPrice } from "@/lib/utils";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, fetchCart, buyNowItem, setBuyNowItem } = useCartStore();
+  const { cart, fetchCart, buyNowItem, setBuyNowItem, selectedCartItems, clearSelectedCartItems } = useCartStore();
   const { user, isAuthenticated } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -35,7 +35,7 @@ export default function CheckoutPage() {
     }
   }, [isAuthenticated, user, router, fetchCart]);
 
-  const items = buyNowItem ? [buyNowItem] : (cart?.items || []);
+  const items = buyNowItem ? [buyNowItem] : (cart?.items?.filter(item => selectedCartItems.length === 0 || selectedCartItems.includes(item._id)) || []);
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const shipping = subtotal >= 999 ? 0 : 99;
   const total = subtotal + shipping - discount;
@@ -71,11 +71,17 @@ export default function CheckoutPage() {
           color: buyNowItem.color,
           price: buyNowItem.price
         }];
+      } else if (selectedCartItems.length > 0) {
+        payload.cartItemIds = selectedCartItems;
       }
 
       const { data } = await api.post("/orders", payload);
       toast.success("Order placed successfully!");
-      if (buyNowItem) setBuyNowItem(null);
+      if (buyNowItem) {
+        setBuyNowItem(null);
+      } else {
+        clearSelectedCartItems();
+      }
       router.push(`/order-confirmation/${data.order._id}`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to place order");

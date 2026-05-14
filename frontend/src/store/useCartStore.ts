@@ -14,6 +14,9 @@ interface CartState {
   getItemCount: () => number;
   buyNowItem: ICartItem | null;
   setBuyNowItem: (item: ICartItem | null) => void;
+  selectedCartItems: string[];
+  setSelectedCartItems: (items: string[]) => void;
+  clearSelectedCartItems: () => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -76,10 +79,13 @@ export const useCartStore = create<CartState>()(
       },
       buyNowItem: null,
       setBuyNowItem: (item) => set({ buyNowItem: item }),
+      selectedCartItems: [],
+      setSelectedCartItems: (items) => set({ selectedCartItems: items }),
+      clearSelectedCartItems: () => set({ selectedCartItems: [] }),
     }),
     {
       name: "cart-storage",
-      partialize: (state) => ({ cart: state.cart }),
+      partialize: (state) => ({ cart: state.cart, selectedCartItems: state.selectedCartItems }),
     }
   )
 );

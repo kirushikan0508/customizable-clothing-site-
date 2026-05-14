@@ -50,30 +50,6 @@ class CheckoutAgent:
         try:
             details = gemini_service.generate_structured_content(context.message, CheckoutIntent, system_instruction)
             
-            # If user mentioned a product, add it to cart first
-            if details.product_to_add:
-                from app.services.mongodb_service import mongodb_service
-                products = mongodb_service.search_products({'keyword': details.product_to_add})
-                if products:
-                    product_id = products[0].get('_id')
-                    add_result = await express_client.add_to_cart(product_id, 1, size=details.size, auth_token=context.auth_token)
-                    if "error" in add_result:
-                        return AgentResult(
-                            response_message=f"I couldn't add '{details.product_to_add}' to your cart: {add_result['error']}",
-                            action_taken="error"
-                        )
-                else:
-                    return AgentResult(
-                        response_message=f"I couldn't find '{details.product_to_add}' in our store. Could you double-check the name?",
-                        action_taken="product_not_found"
-                    )
-            
-            if not details.ready_to_checkout:
-                return AgentResult(
-                    response_message="Would you like me to proceed with the checkout? Just say 'yes' or 'proceed to checkout' when you're ready!",
-                    action_taken="checkout_prompt"
-                )
-            
             # Automatically fetch the user's saved address
             shipping_address = await self._get_saved_address(context.auth_token)
             
@@ -83,9 +59,35 @@ class CheckoutAgent:
                     action_taken="checkout_missing_info",
                     update_memory={"active_agent": None}
                 )
-                
-            # Create order with the structured shippingAddress
+
+            if not details.ready_to_checkout:
+                return AgentResult(
+                    response_message="Would you like me to proceed with the checkout? Just say 'yes' or 'proceed to checkout' when you're ready!",
+                    action_taken="checkout_prompt"
+                )
+
+            # Create order payload with the structured shippingAddress
             order_payload = {"shippingAddress": shipping_address}
+
+            # If user mentioned a product, use direct buy (bypass cart)
+            if details.product_to_add:
+                from app.services.mongodb_service import mongodb_service
+                products = mongodb_service.search_products({'keyword': details.product_to_add})
+                if products:
+                    product = products[0]
+                    # Add directly to order payload to checkout ONLY this item
+                    order_payload["items"] = [{
+                        "product": str(product.get('_id')),
+                        "quantity": 1,
+                        "size": details.size,
+                        "price": product.get('price', 0)
+                    }]
+                else:
+                    return AgentResult(
+                        response_message=f"I couldn't find '{details.product_to_add}' in our store. Could you double-check the name?",
+                        action_taken="product_not_found"
+                    )
+
             response = await express_client.create_order(order_payload, auth_token=context.auth_token)
             
             if "error" not in response:
