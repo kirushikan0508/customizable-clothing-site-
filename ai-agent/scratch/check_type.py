@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-uri = os.getenv("MONGODB_URI", "mongodb+srv://kkirushikan_db_user:u81SaRGQ3UNoOMRH@cluster0.pedbpsk.mongodb.net/")
-db_name = os.getenv("MONGODB_DATABASE", "test")
+uri = os.getenv("MONGODB_URI")
+db_name = os.getenv("MONGODB_DATABASE")
 
 client = MongoClient(uri)
 db = client[db_name]
