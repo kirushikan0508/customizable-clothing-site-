@@ -6,6 +6,8 @@ import ProductSection from "@/components/sections/ProductSection";
 import Testimonials from "@/components/sections/Testimonials";
 import InstagramFeed from "@/components/sections/InstagramFeed";
 import Newsletter from "@/components/sections/Newsletter";
+import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -45,6 +47,15 @@ export default function HomePage() {
       <Testimonials />
       <InstagramFeed />
       <Newsletter />
+
+      {/* Chat Floating Action Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Link href="/chat">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-xl transition-all hover:scale-110 hover:bg-neutral-800 hover:shadow-2xl">
+            <MessageCircle size={28} />
+          </div>
+        </Link>
+      </div>
     </>
   );
 }

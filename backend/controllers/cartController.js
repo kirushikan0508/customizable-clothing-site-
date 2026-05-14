@@ -25,7 +25,7 @@ export const getCart = async (req, res, next) => {
 // @route   POST /api/cart
 export const addToCart = async (req, res, next) => {
   try {
-    const { productId, quantity = 1, size, color } = req.body;
+    const { productId, quantity = 1, size, color, customization, customPrice } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) throw new NotFoundError("Product not found");
@@ -40,14 +40,18 @@ export const addToCart = async (req, res, next) => {
     }
 
     // Check if item already exists in cart (same product + size + color)
-    const existingIndex = cart.items.findIndex(
-      (item) =>
-        item.product.toString() === productId &&
-        item.size === size &&
-        item.color === (color || "")
-    );
+    // For custom items, we skip grouping for now to avoid complexity with identical designs
+    const existingIndex = customization 
+      ? -1 
+      : cart.items.findIndex(
+          (item) =>
+            item.product.toString() === productId &&
+            item.size === size &&
+            item.color === (color || "") &&
+            !item.customization?.isCustom
+        );
 
-    const itemPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
+    const itemPrice = customPrice || (product.discountPrice > 0 ? product.discountPrice : product.price);
 
     if (existingIndex > -1) {
       cart.items[existingIndex].quantity += quantity;
@@ -59,6 +63,7 @@ export const addToCart = async (req, res, next) => {
         size,
         color: color || "",
         price: itemPrice,
+        customization: customization || { isCustom: false },
       });
     }
 

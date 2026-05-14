@@ -189,6 +189,7 @@ export const deleteProduct = async (req, res, next) => {
 // @route   POST /api/products/:id/reviews
 export const addReview = async (req, res, next) => {
   try {
+    console.log(`Adding review for product: ${req.params.id} by user: ${req.user._id}`);
     const { rating, comment } = req.body;
     const productId = req.params.id;
 

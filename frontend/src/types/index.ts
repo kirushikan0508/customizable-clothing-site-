@@ -83,6 +83,12 @@ export interface ICartItem {
   size: string;
   color: string;
   price: number;
+  customization?: {
+    front: { image?: string; text?: string; details?: any };
+    back: { image?: string; text?: string; details?: any };
+    isCustom: boolean;
+    tshirtType?: string;
+  };
 }
 
 export interface ICart {

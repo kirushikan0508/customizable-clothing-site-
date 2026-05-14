@@ -10,12 +10,27 @@ import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import EmptyState from "@/components/ui/EmptyState";
 import { formatPrice } from "@/lib/utils";
+import TShirtPreview from "@/components/customizer/TShirtPreview";
+
+const colorHexMap: Record<string, string> = {
+  "White": "#FFFFFF", "Black": "#000000", "Red": "#DC2626", "Blue": "#2563EB",
+  "Green": "#16A34A", "Yellow": "#EAB308", "Navy": "#1E3A5F", "Grey": "#6B7280",
+};
 
 export default function CartPage() {
-  const { cart, fetchCart, updateQuantity, removeItem, isLoading } = useCartStore();
+  const { cart, fetchCart, updateQuantity, removeItem, isLoading, selectedCartItems, setSelectedCartItems } = useCartStore();
   const { isAuthenticated } = useAuthStore();
 
-  useEffect(() => { if (isAuthenticated) fetchCart(); }, [isAuthenticated, fetchCart]);
+  useEffect(() => { 
+    if (isAuthenticated) fetchCart(); 
+  }, [isAuthenticated, fetchCart]);
+
+  // Set all items as selected by default when cart loads
+  useEffect(() => {
+    if (cart?.items && cart.items.length > 0 && selectedCartItems.length === 0) {
+      setSelectedCartItems(cart.items.map(item => item._id));
+    }
+  }, [cart, selectedCartItems.length, setSelectedCartItems]);
 
   const handleQuantity = async (itemId: string, qty: number) => {
     try { await updateQuantity(itemId, qty); } catch { toast.error("Failed to update"); }
@@ -34,9 +49,28 @@ export default function CartPage() {
   }
 
   const items = cart?.items || [];
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const shipping = subtotal >= 999 ? 0 : 99;
+  
+  // Calculate totals only for selected items
+  const selectedItemsDetails = items.filter(item => selectedCartItems.includes(item._id));
+  const subtotal = selectedItemsDetails.reduce((s, i) => s + i.price * i.quantity, 0);
+  const shipping = (subtotal >= 999 || subtotal === 0) ? 0 : 99;
   const total = subtotal + shipping;
+
+  const toggleSelection = (itemId: string) => {
+    if (selectedCartItems.includes(itemId)) {
+      setSelectedCartItems(selectedCartItems.filter(id => id !== itemId));
+    } else {
+      setSelectedCartItems([...selectedCartItems, itemId]);
+    }
+  };
+
+  const toggleAll = () => {
+    if (selectedCartItems.length === items.length) {
+      setSelectedCartItems([]);
+    } else {
+      setSelectedCartItems(items.map(item => item._id));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-surface">
@@ -54,6 +88,16 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart items */}
             <div className="lg:col-span-2 space-y-4">
+              <div className="bg-white p-4 flex items-center gap-3 border border-border">
+                <input 
+                  type="checkbox" 
+                  checked={items.length > 0 && selectedCartItems.length === items.length}
+                  onChange={toggleAll}
+                  className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
+                />
+                <span className="text-sm font-medium">Select All Items</span>
+              </div>
+              
               {items.map((item, i) => (
                 <motion.div
                   key={item._id}
@@ -62,13 +106,48 @@ export default function CartPage() {
                   transition={{ delay: i * 0.1 }}
                   className="bg-white p-4 md:p-6 flex gap-4 md:gap-6"
                 >
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedCartItems.includes(item._id)}
+                      onChange={() => toggleSelection(item._id)}
+                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
+                    />
+                  </div>
                   <Link href={`/product/${item.product?.slug}`} className="shrink-0">
-                    <div className="relative w-24 h-32 md:w-28 md:h-36 bg-gray-100 overflow-hidden">
-                      <Image
-                        src={item.product?.images?.[0]?.url || "/placeholder.jpg"}
-                        alt={item.product?.title || "Product"}
-                        fill className="object-cover" sizes="112px"
-                      />
+                    <div className="relative w-24 h-32 md:w-28 md:h-36 bg-[#F5F1EC] rounded overflow-hidden flex flex-col items-center justify-center gap-2 py-2">
+                      {item.customization?.isCustom ? (
+                        <>
+                           <TShirtPreview
+                             view="front"
+                             tshirtColor={colorHexMap[item.color] || "#FFFFFF"}
+                             tshirtType={item.customization.tshirtType || "Round Neck"}
+                             design={{
+                               image: item.customization.front?.image || null,
+                               text: item.customization.front?.text || "",
+                               ...(item.customization.front?.details || { imagePosition: { x: 140, y: 120 }, imageRotation: 0, imageScale: 1, textPosition: { x: 150, y: 180 }, fontFamily: "Inter, sans-serif", fontSize: 24, textColor: "#000000" })
+                             }}
+                             size={60}
+                           />
+                           <TShirtPreview
+                             view="back"
+                             tshirtColor={colorHexMap[item.color] || "#FFFFFF"}
+                             tshirtType={item.customization.tshirtType || "Round Neck"}
+                             design={{
+                               image: item.customization.back?.image || null,
+                               text: item.customization.back?.text || "",
+                               ...(item.customization.back?.details || { imagePosition: { x: 140, y: 120 }, imageRotation: 0, imageScale: 1, textPosition: { x: 150, y: 180 }, fontFamily: "Inter, sans-serif", fontSize: 24, textColor: "#000000" })
+                             }}
+                             size={60}
+                           />
+                        </>
+                      ) : (
+                        <Image
+                          src={item.product?.images?.[0]?.url || "/placeholder.jpg"}
+                          alt={item.product?.title || "Product"}
+                          fill className="object-cover" sizes="112px"
+                        />
+                      )}
                     </div>
                   </Link>
 
@@ -80,10 +159,49 @@ export default function CartPage() {
                             {item.product?.title}
                           </h3>
                         </Link>
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted">
+                        <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted">
                           {item.size && <span>Size: {item.size}</span>}
                           {item.color && <span>Color: {item.color}</span>}
+                          {item.customization?.isCustom && (
+                            <span className="bg-[#F5F1EC] text-[#9C6B4F] px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider">
+                              Custom Design
+                            </span>
+                          )}
                         </div>
+                        {item.customization?.isCustom && (
+                          <div className="mt-3 bg-[#FAF8F5] p-2.5 rounded-lg border border-[#E7D7C9] space-y-2">
+                            {item.customization.front && (item.customization.front.text || item.customization.front.image) && (
+                              <div>
+                                <p className="text-[11px] font-bold text-[#4A3B32] border-b border-[#E7D7C9] pb-1 mb-1">Front Details</p>
+                                {item.customization.front.image && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    • Image Position: X:{Math.round(item.customization.front.details.imagePosition.x)} Y:{Math.round(item.customization.front.details.imagePosition.y)} | Scale: {item.customization.front.details.imageScale}x
+                                  </p>
+                                )}
+                                {item.customization.front.text && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    • Text: "{item.customization.front.text}" | Pos: X:{Math.round(item.customization.front.details.textPosition.x)} Y:{Math.round(item.customization.front.details.textPosition.y)}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            {item.customization.back && (item.customization.back.text || item.customization.back.image) && (
+                              <div>
+                                <p className="text-[11px] font-bold text-[#4A3B32] border-b border-[#E7D7C9] pb-1 mb-1">Back Details</p>
+                                {item.customization.back.image && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    • Image Position: X:{Math.round(item.customization.back.details.imagePosition.x)} Y:{Math.round(item.customization.back.details.imagePosition.y)} | Scale: {item.customization.back.details.imageScale}x
+                                  </p>
+                                )}
+                                {item.customization.back.text && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    • Text: "{item.customization.back.text}" | Pos: X:{Math.round(item.customization.back.details.textPosition.x)} Y:{Math.round(item.customization.back.details.textPosition.y)}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <p className="text-sm font-bold whitespace-nowrap">
                         {formatPrice(item.price * item.quantity)}
@@ -121,9 +239,15 @@ export default function CartPage() {
                     <span>Total</span><span>{formatPrice(total)}</span>
                   </div>
                 </div>
-                <Link href="/checkout" className="btn-primary w-full mt-6 py-4">
-                  Proceed to Checkout <ArrowRight size={16} />
-                </Link>
+                {selectedCartItems.length > 0 ? (
+                  <Link href="/checkout" className="btn-primary w-full mt-6 py-4 flex items-center justify-center gap-2">
+                    Proceed to Checkout <ArrowRight size={16} />
+                  </Link>
+                ) : (
+                  <button disabled className="btn-primary w-full mt-6 py-4 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+                    Select items to checkout
+                  </button>
+                )}
                 <Link href="/shop" className="btn-secondary w-full mt-3 py-3 text-xs">
                   Continue Shopping
                 </Link>
