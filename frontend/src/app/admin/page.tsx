@@ -26,7 +26,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     api.get("/analytics/dashboard")
       .then(({ data }) => setStats(data))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
               <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7D7C9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8B6B52' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8B6B52' }} tickFormatter={(val) => `Rs.${val/1000}k`} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8B6B52' }} tickFormatter={(val) => `Rs.${val / 1000}k`} />
                 <Tooltip cursor={{ fill: '#F5F1EC' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: '#fff', color: '#5C4033' }} />
                 <Bar dataKey="revenue" fill="#C69C72" radius={[6, 6, 6, 6]} barSize={32} />
               </BarChart>
@@ -172,8 +172,8 @@ export default function AdminDashboard() {
                   <span className={cn(
                     "inline-block mt-1 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md",
                     order.orderStatus === "delivered" ? "bg-[#E7D7C9] text-[#5C4033]" :
-                    order.orderStatus === "cancelled" ? "bg-red-50 text-red-600" :
-                    "bg-surface text-primary"
+                      order.orderStatus === "cancelled" ? "bg-red-50 text-red-600" :
+                        "bg-surface text-primary"
                   )}>
                     {order.orderStatus}
                   </span>

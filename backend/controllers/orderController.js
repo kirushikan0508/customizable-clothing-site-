@@ -6,7 +6,7 @@ import { NotFoundError, BadRequestError } from "../utils/ApiError.js";
 
 export const createOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, couponCode, notes, items: directItems } = req.body;
+    const { shippingAddress, couponCode, notes, items: directItems, cartItemIds } = req.body;
     let orderItems = [];
     let cart = null;
 
@@ -28,12 +28,18 @@ export const createOrder = async (req, res, next) => {
       cart = await Cart.findOne({ user: req.user._id }).populate("items.product");
       if (!cart || cart.items.length === 0) throw new BadRequestError("Cart is empty");
 
-      for (const item of cart.items) {
+      let itemsToProcess = cart.items;
+      if (cartItemIds && cartItemIds.length > 0) {
+        itemsToProcess = cart.items.filter(item => cartItemIds.includes(item._id.toString()));
+        if (itemsToProcess.length === 0) throw new BadRequestError("Selected items not found in cart");
+      }
+
+      for (const item of itemsToProcess) {
         if (!item.product || item.product.stock < item.quantity)
           throw new BadRequestError(`Insufficient stock for ${item.product?.title || "a product"}`);
       }
 
-      orderItems = cart.items.map((item) => ({
+      orderItems = itemsToProcess.map((item) => ({
         product: item.product._id, title: item.product.title,
         image: item.product.images?.[0]?.url || "", size: item.size,
         color: item.color, quantity: item.quantity, price: item.price,
@@ -78,7 +84,11 @@ export const createOrder = async (req, res, next) => {
 
     // Only clear cart if order was from cart
     if (cart) {
-      cart.items = [];
+      if (cartItemIds && cartItemIds.length > 0) {
+        cart.items = cart.items.filter(item => !cartItemIds.includes(item._id.toString()));
+      } else {
+        cart.items = [];
+      }
       await cart.save();
     }
 

@@ -25,8 +25,9 @@ reviewSchema.index({ product: 1, createdAt: -1 });
 
 // Static method to update product ratings
 reviewSchema.statics.calculateAverageRating = async function (productId) {
+  console.log(`Calculating average rating for product: ${productId}`);
   const result = await this.aggregate([
-    { $match: { product: productId } },
+    { $match: { product: new mongoose.Types.ObjectId(productId) } },
     {
       $group: {
         _id: "$product",
@@ -36,7 +37,7 @@ reviewSchema.statics.calculateAverageRating = async function (productId) {
     },
   ]);
 
-  const Product = mongoose.model("Product");
+  const Product = mongoose.models.Product || mongoose.model("Product");
   if (result.length > 0) {
     await Product.findByIdAndUpdate(productId, {
       ratings: Math.round(result[0].avgRating * 10) / 10,
@@ -62,5 +63,5 @@ reviewSchema.post("findOneAndDelete", function (doc) {
   }
 });
 
-const Review = mongoose.model("Review", reviewSchema);
+const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
 export default Review;

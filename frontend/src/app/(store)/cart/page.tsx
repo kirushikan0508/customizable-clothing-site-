@@ -18,10 +18,19 @@ const colorHexMap: Record<string, string> = {
 };
 
 export default function CartPage() {
-  const { cart, fetchCart, updateQuantity, removeItem, isLoading } = useCartStore();
+  const { cart, fetchCart, updateQuantity, removeItem, isLoading, selectedCartItems, setSelectedCartItems } = useCartStore();
   const { isAuthenticated } = useAuthStore();
 
-  useEffect(() => { if (isAuthenticated) fetchCart(); }, [isAuthenticated, fetchCart]);
+  useEffect(() => { 
+    if (isAuthenticated) fetchCart(); 
+  }, [isAuthenticated, fetchCart]);
+
+  // Set all items as selected by default when cart loads
+  useEffect(() => {
+    if (cart?.items && cart.items.length > 0 && selectedCartItems.length === 0) {
+      setSelectedCartItems(cart.items.map(item => item._id));
+    }
+  }, [cart, selectedCartItems.length, setSelectedCartItems]);
 
   const handleQuantity = async (itemId: string, qty: number) => {
     try { await updateQuantity(itemId, qty); } catch { toast.error("Failed to update"); }
@@ -40,9 +49,28 @@ export default function CartPage() {
   }
 
   const items = cart?.items || [];
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const shipping = subtotal >= 999 ? 0 : 99;
+  
+  // Calculate totals only for selected items
+  const selectedItemsDetails = items.filter(item => selectedCartItems.includes(item._id));
+  const subtotal = selectedItemsDetails.reduce((s, i) => s + i.price * i.quantity, 0);
+  const shipping = (subtotal >= 999 || subtotal === 0) ? 0 : 99;
   const total = subtotal + shipping;
+
+  const toggleSelection = (itemId: string) => {
+    if (selectedCartItems.includes(itemId)) {
+      setSelectedCartItems(selectedCartItems.filter(id => id !== itemId));
+    } else {
+      setSelectedCartItems([...selectedCartItems, itemId]);
+    }
+  };
+
+  const toggleAll = () => {
+    if (selectedCartItems.length === items.length) {
+      setSelectedCartItems([]);
+    } else {
+      setSelectedCartItems(items.map(item => item._id));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-surface">
@@ -60,6 +88,16 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart items */}
             <div className="lg:col-span-2 space-y-4">
+              <div className="bg-white p-4 flex items-center gap-3 border border-border">
+                <input 
+                  type="checkbox" 
+                  checked={items.length > 0 && selectedCartItems.length === items.length}
+                  onChange={toggleAll}
+                  className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
+                />
+                <span className="text-sm font-medium">Select All Items</span>
+              </div>
+              
               {items.map((item, i) => (
                 <motion.div
                   key={item._id}
@@ -68,6 +106,14 @@ export default function CartPage() {
                   transition={{ delay: i * 0.1 }}
                   className="bg-white p-4 md:p-6 flex gap-4 md:gap-6"
                 >
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedCartItems.includes(item._id)}
+                      onChange={() => toggleSelection(item._id)}
+                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
+                    />
+                  </div>
                   <Link href={`/product/${item.product?.slug}`} className="shrink-0">
                     <div className="relative w-24 h-32 md:w-28 md:h-36 bg-[#F5F1EC] rounded overflow-hidden flex flex-col items-center justify-center gap-2 py-2">
                       {item.customization?.isCustom ? (
@@ -193,9 +239,15 @@ export default function CartPage() {
                     <span>Total</span><span>{formatPrice(total)}</span>
                   </div>
                 </div>
-                <Link href="/checkout" className="btn-primary w-full mt-6 py-4">
-                  Proceed to Checkout <ArrowRight size={16} />
-                </Link>
+                {selectedCartItems.length > 0 ? (
+                  <Link href="/checkout" className="btn-primary w-full mt-6 py-4 flex items-center justify-center gap-2">
+                    Proceed to Checkout <ArrowRight size={16} />
+                  </Link>
+                ) : (
+                  <button disabled className="btn-primary w-full mt-6 py-4 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+                    Select items to checkout
+                  </button>
+                )}
                 <Link href="/shop" className="btn-secondary w-full mt-3 py-3 text-xs">
                   Continue Shopping
                 </Link>

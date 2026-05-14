@@ -29,8 +29,8 @@ export default function AdminAnalyticsPage() {
     ]).then(([revRes, custRes]) => {
       setData(revRes.data.data);
       setTopCustomers(custRes.data.topCustomers);
-    }).catch(() => {})
-    .finally(() => setIsLoading(false));
+    }).catch(() => { })
+      .finally(() => setIsLoading(false));
   }, [period]);
 
   const chartData = (data || []).map((d: any) => ({
@@ -81,7 +81,7 @@ export default function AdminAnalyticsPage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7D7C9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8B6B52' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8B6B52' }} tickFormatter={(val) => `Rs.${val/1000}k`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8B6B52' }} tickFormatter={(val) => `Rs.${val / 1000}k`} />
                   <Tooltip cursor={{ stroke: '#C69C72', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: '#fff', color: '#5C4033' }} formatter={(val: any) => formatPrice(Number(val))} />
                   <Area type="monotone" dataKey="revenue" stroke="#C69C72" fill="url(#colorRev)" strokeWidth={3} activeDot={{ r: 6, strokeWidth: 0, fill: '#5C4033' }} />
                 </AreaChart>
