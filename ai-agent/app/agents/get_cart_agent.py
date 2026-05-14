@@ -15,8 +15,14 @@ class GetCartAgent:
                 )
                 
             # Have Gemini format a nice cart summary
-            system_instruction = "Summarize the user's shopping cart in a friendly, concise manner."
-            summary = gemini_service.generate_content(f"Cart Data: {cart_data}", system_instruction)
+            try:
+                system_instruction = "Summarize the user's shopping cart in a friendly, concise manner."
+                summary = gemini_service.generate_content(f"Cart Data: {cart_data}", system_instruction)
+            except Exception:
+                # Fallback to simple list if Gemini fails
+                items = cart_data.get("items", [])
+                item_list = "\n".join([f"- {item.get('title')} (Qty: {item.get('quantity')})" for item in items])
+                summary = f"Here is your cart:\n{item_list}\nTotal: Rs. {cart_data.get('totalPrice', 0)}"
             
             return AgentResult(
                 response_message=summary,

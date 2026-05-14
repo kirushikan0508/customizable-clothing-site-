@@ -32,7 +32,7 @@ class GeminiService:
             )
             return response.text
         except Exception as e:
-            return f"Error generating response: {str(e)}"
+            raise Exception(f"Error generating response: {str(e)}")
 
     def generate_structured_content(self, prompt: str, schema_class: Type[BaseModel], system_instruction: Optional[str] = None) -> BaseModel:
         if not self.client:

@@ -61,32 +61,54 @@ class ExpressClient:
                 logger.error(f"Error fetching cart: {e}")
                 return {"items": [], "totalPrice": 0}
 
-    async def add_to_cart(self, product_id: str, quantity: int = 1, auth_token: Optional[str] = None) -> Dict[str, Any]:
+    async def add_to_cart(self, product_id: str, quantity: int = 1, size: Optional[str] = None, auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
                 payload = {"productId": product_id, "quantity": quantity}
+                if size:
+                    payload["size"] = size
+                    
                 response = await client.post(
-                    f"{self.base_url}/cart/add", 
+                    f"{self.base_url}/cart", 
                     json=payload, 
                     headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
                 return response.json()
+            except httpx.HTTPStatusError as e:
+                error_detail = str(e)
+                try:
+                    error_json = e.response.json()
+                    error_detail = error_json.get("message") or error_json.get("error") or str(e)
+                except Exception:
+                    pass
+                logger.error(f"HTTP error adding to cart: {error_detail}")
+                return {"error": error_detail}
             except Exception as e:
-                logger.error(f"Error adding to cart: {e}")
-                return {"error": str(e)}
+                error_str = str(e) if str(e) else repr(e)
+                logger.error(f"Error adding to cart: {error_str}")
+                return {"error": error_str}
 
     async def remove_from_cart(self, item_id: str, auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.delete(
-                    f"{self.base_url}/cart/remove/{item_id}", 
+                    f"{self.base_url}/cart/{item_id}", 
                     headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
                 return response.json()
+            except httpx.HTTPStatusError as e:
+                error_detail = str(e)
+                try:
+                    error_json = e.response.json()
+                    error_detail = error_json.get("message") or error_json.get("error") or str(e)
+                except Exception:
+                    pass
+                logger.error(f"HTTP error removing from cart: {error_detail}")
+                return {"error": error_detail}
             except Exception as e:
                 logger.error(f"Error removing from cart: {e}")
                 return {"error": str(e)}
@@ -95,13 +117,22 @@ class ExpressClient:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    f"{self.base_url}/orders/create", 
+                    f"{self.base_url}/orders", 
                     json=order_data, 
                     headers=self._get_headers(auth_token),
                     timeout=self.timeout
                 )
                 response.raise_for_status()
                 return response.json()
+            except httpx.HTTPStatusError as e:
+                error_detail = str(e)
+                try:
+                    error_json = e.response.json()
+                    error_detail = error_json.get("message") or error_json.get("error") or str(e)
+                except Exception:
+                    pass
+                logger.error(f"HTTP error creating order: {error_detail}")
+                return {"error": error_detail}
             except Exception as e:
                 logger.error(f"Error creating order: {e}")
                 return {"error": str(e)}

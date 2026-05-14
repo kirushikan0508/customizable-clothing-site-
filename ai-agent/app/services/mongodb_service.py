@@ -75,10 +75,12 @@ class MongoDBService:
         search_terms = []
         if filters.get('keyword'):
             search_terms.append(filters['keyword'])
-        if filters.get('category') and 'category' not in mongo_query:
-            search_terms.append(filters['category'])
         if filters.get('style'):
             search_terms.append(filters['style'])
+        
+        # If category ID wasn't found, add the category name to search terms
+        if filters.get('category') and 'category' not in mongo_query:
+            search_terms.append(filters['category'])
         
         if search_terms:
             mongo_query['$text'] = {'$search': ' '.join(search_terms)}
@@ -99,17 +101,20 @@ class MongoDBService:
                     ]
             results = list(collection.find(mongo_query).limit(20))
         
-        # If no results and we had filters, try a broader search
-        if not results and search_terms:
-            valid_terms = [t for t in search_terms if t]
+        # If no results, try a much broader search
+        if not results:
+            broad_terms = search_terms.copy()
+            # If we had a category name but it was resolved to ID, add it back for broad search
+            if filters.get('category') and filters['category'] not in broad_terms:
+                broad_terms.append(filters['category'])
+            
+            valid_terms = [t for t in broad_terms if t]
             if valid_terms:
+                # Remove category ID constraint for broadest search
                 broad_query = {'isActive': True, '$or': [
-                    {'title': {'$regex': '|'.join(valid_terms), '$options': 'i'}},
-                    {'description': {'$regex': '|'.join(valid_terms), '$options': 'i'}}
+                    {'title': {'$regex': f".*{'|'.join(valid_terms)}.*", '$options': 'i'}},
+                    {'description': {'$regex': f".*{'|'.join(valid_terms)}.*", '$options': 'i'}}
                 ]}
-                # If we had a category ID, try to keep it in broad search
-                if 'category' in mongo_query:
-                    broad_query['category'] = mongo_query['category']
                 results = list(collection.find(broad_query).limit(20))
         
         return self.stringify_ids(results)

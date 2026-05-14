@@ -64,8 +64,11 @@ export default function ChatPage() {
 
     try {
       const token = localStorage.getItem("accessToken") || undefined;
+
+      // Use 127.0.0.1 instead of localhost to avoid IPv6 resolution issues on some Windows systems
+      const apiBaseUrl = process.env.NEXT_PUBLIC_AGENT_API_URL || "http://127.0.0.1:8000";
       
-      const response = await fetch("http://localhost:8000/api/chat", {
+      const response = await fetch(`${apiBaseUrl}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,11 +81,13 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
+        const errorText = await response.text().catch(() => "Unknown error");
+        console.error("Agent error response:", errorText);
         throw new Error("Failed to connect to AI agent.");
       }
 
       const data = await response.json();
-      
+
       const agentResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: "agent",
@@ -90,7 +95,7 @@ export default function ChatPage() {
         timestamp: new Date(),
         data: data.data
       };
-      
+
       setMessages((prev) => [...prev, agentResponse]);
     } catch (error) {
       console.error("Chat error:", error);
@@ -109,10 +114,10 @@ export default function ChatPage() {
   return (
     <div className="min-h-[calc(100vh-80px)] bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        
+
         {/* Chat Container */}
         <div className="flex h-[80vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-neutral-200">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between border-b border-neutral-100 bg-white/80 p-5 backdrop-blur-md">
             <div className="flex items-center space-x-4">
@@ -146,39 +151,34 @@ export default function ChatPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   key={message.id}
-                  className={`flex flex-col ${
-                    message.role === "user" ? "items-end" : "items-start"
-                  }`}
+                  className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"
+                    }`}
                 >
                   <div
-                    className={`flex max-w-[80%] items-start space-x-3 ${
-                      message.role === "user" ? "flex-row-reverse space-x-reverse" : "flex-row"
-                    }`}
+                    className={`flex max-w-[80%] items-start space-x-3 ${message.role === "user" ? "flex-row-reverse space-x-reverse" : "flex-row"
+                      }`}
                   >
                     {/* Avatar */}
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-sm ${
-                        message.role === "user"
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-sm ${message.role === "user"
                           ? "bg-neutral-200 text-neutral-600"
                           : "bg-black text-white"
-                      }`}
+                        }`}
                     >
                       {message.role === "user" ? <User size={16} /> : <Bot size={16} />}
                     </div>
 
                     {/* Message Bubble */}
                     <div
-                      className={`rounded-2xl px-5 py-3.5 shadow-sm ${
-                        message.role === "user"
+                      className={`rounded-2xl px-5 py-3.5 shadow-sm ${message.role === "user"
                           ? "rounded-tr-none bg-black text-white"
                           : "rounded-tl-none bg-white text-neutral-800 ring-1 ring-neutral-200"
-                      }`}
+                        }`}
                     >
                       <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
                       <span
-                        className={`mt-2 block text-xs font-medium ${
-                          message.role === "user" ? "text-neutral-400" : "text-neutral-400"
-                        }`}
+                        className={`mt-2 block text-xs font-medium ${message.role === "user" ? "text-neutral-400" : "text-neutral-400"
+                          }`}
                       >
                         {message.timestamp.toLocaleTimeString([], {
                           hour: "2-digit",
@@ -193,7 +193,7 @@ export default function ChatPage() {
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 pl-11 w-full max-w-[90%]">
                       {message.data.products.slice(0, 3).map((product: any, idx: number) => (
                         <div key={product._id || idx} className="w-full">
-                           <ProductCard product={product} />
+                          <ProductCard product={product} />
                         </div>
                       ))}
                     </div>
@@ -202,16 +202,16 @@ export default function ChatPage() {
                   {/* Render Cart Data if present */}
                   {message.data?.cart_response && (
                     <div className="mt-2 pl-11">
-                       <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                         Cart updated successfully
-                       </span>
+                      <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                        Cart updated successfully
+                      </span>
                     </div>
                   )}
                   {message.data?.order && (
                     <div className="mt-2 pl-11">
-                       <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                         Order confirmed! ID: {message.data.order._id || "processing"}
-                       </span>
+                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                        Order confirmed! ID: {message.data.order._id || "processing"}
+                      </span>
                     </div>
                   )}
                 </motion.div>
@@ -220,7 +220,7 @@ export default function ChatPage() {
 
             {/* Typing Indicator */}
             {isTyping && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex justify-start"

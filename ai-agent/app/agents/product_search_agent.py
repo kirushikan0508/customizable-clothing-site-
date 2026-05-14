@@ -16,11 +16,22 @@ class ProductSearchAgent:
     async def process(self, context: AgentContext) -> AgentResult:
         # STEP 1: Extract filters using Gemini (only for parsing, NOT for product data)
         system_instruction = "You are a product search filter extractor. Extract the requested clothing parameters from the user's message."
+        
+        query_params = {}
+        msg = context.message.lower()
+        
+        # Simple keyword-based heuristics to save quota
+        if "printed" in msg:
+            query_params["keyword"] = "printed"
+        if "shirt" in msg or "tee" in msg:
+            query_params["category"] = "T-Shirts"
+            
         try:
-            filters = gemini_service.generate_structured_content(context.message, ProductSearchFilters, system_instruction)
+            if not query_params:
+                filters = gemini_service.generate_structured_content(context.message, ProductSearchFilters, system_instruction)
+                query_params = filters.model_dump(exclude_none=True)
             
             # STEP 2: Query MongoDB DIRECTLY - never use Gemini's knowledge for products
-            query_params = filters.model_dump(exclude_none=True)
             products = mongodb_service.search_products(query_params)
             
             # STEP 3: Format response using ONLY database data
@@ -34,15 +45,19 @@ class ProductSearchAgent:
                     db_context += f"{i}. {p.get('title', 'Unknown')} - {price_str}\n"
                 
                 # Use Gemini ONLY to format - constrained to database data
-                format_instruction = """You are a helpful shopping assistant.
-                Based ONLY on the products listed below, provide a brief, friendly response.
-                RULES:
-                - Only mention products and details from the list provided.
-                - Do NOT add any product information that is not in the list.
-                - Do NOT invent prices, colors, or features.
-                - Keep it conversational and brief."""
-                
-                response_msg = gemini_service.generate_content(db_context, format_instruction)
+                try:
+                    format_instruction = """You are a helpful shopping assistant.
+                    Based ONLY on the products listed below, provide a brief, friendly response.
+                    RULES:
+                    - Only mention products and details from the list provided.
+                    - Do NOT add any product information that is not in the list.
+                    - Do NOT invent prices, colors, or features.
+                    - Keep it conversational and brief."""
+                    
+                    response_msg = gemini_service.generate_content(db_context, format_instruction)
+                except Exception:
+                    # Fallback formatting if Gemini fails
+                    response_msg = f"I found {len(products)} products for you:\n" + "\n".join([f"- {p.get('title')} (Rs. {p.get('price')})" for p in products[:3]])
                 
                 # Store in memory for future reference
                 update_memory = {"last_products_shown": products}
@@ -53,11 +68,25 @@ class ProductSearchAgent:
                     action_taken="search_products"
                 )
             else:
+                # No products found, check categories for suggestions
                 categories = mongodb_service.get_categories()
-                cat_names = [c.get('name') for c in categories[:5]]
-                response_msg = "I didn't find any products matching your search in our database."
+                
+                requested_cat = filters.category if filters.category else ""
+                matched_cat = None
+                if requested_cat:
+                    for c in categories:
+                        if requested_cat.lower() in c.get('name', '').lower():
+                            matched_cat = c.get('name')
+                            break
+                
+                if matched_cat:
+                    response_msg = f"I found the '{matched_cat}' category, but we don't have any active products in it right now."
+                else:
+                    response_msg = "I didn't find any products matching your search in our database."
+                
+                cat_names = [c.get('name') for c in categories[:5] if c.get('name') != matched_cat]
                 if cat_names:
-                    response_msg += f" However, we have items in categories like {', '.join(cat_names)}. Would you like to see something from those?"
+                    response_msg += f" However, we have other items in categories like {', '.join(cat_names)}. Would you like to see something from those?"
                 
                 return AgentResult(
                     response_message=response_msg,
@@ -65,8 +94,14 @@ class ProductSearchAgent:
                     action_taken="search_products"
                 )
         except Exception as e:
+            error_str = str(e)
+            if "503" in error_str or "429" in error_str or "UNAVAILABLE" in error_str:
+                return AgentResult(
+                    response_message="I'm sorry, my AI model is currently reaching its temporary usage limit (Gemini Free Tier). Please wait about 30-60 seconds and try your request again. I'm working on being more efficient!",
+                    action_taken="error_rate_limit"
+                )
             return AgentResult(
-                response_message=f"I'm sorry, I had trouble searching for that: {str(e)}",
+                response_message=f"I'm sorry, I had trouble searching for that: {error_str}",
                 action_taken="error"
             )
 

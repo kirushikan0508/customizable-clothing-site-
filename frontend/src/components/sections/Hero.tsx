@@ -101,7 +101,7 @@ export default function Hero() {
                 className="w-full h-full object-cover"
               />
             </div>
-            
+
             {/* Right top medium image */}
             <div className="absolute right-0 top-0 w-[48%] h-[350px] rounded-[32px] overflow-hidden shadow-lg z-10 bg-gray-300">
               <img
@@ -129,16 +129,16 @@ export default function Hero() {
             >
               <div className="flex -space-x-2">
                 <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white overflow-hidden">
-                   <img src="https://i.pravatar.cc/100?img=1" alt="user" className="w-full h-full object-cover" />
+                  <img src="https://i.pravatar.cc/100?img=1" alt="user" className="w-full h-full object-cover" />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white overflow-hidden">
-                   <img src="https://i.pravatar.cc/100?img=5" alt="user" className="w-full h-full object-cover" />
+                  <img src="https://i.pravatar.cc/100?img=5" alt="user" className="w-full h-full object-cover" />
                 </div>
               </div>
               <div>
                 <p className="text-xs font-bold text-[#5C4033]">Excellent 4.9 Rating</p>
                 <div className="flex text-yellow-400 mt-0.5">
-                   {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-yellow-400" />)}
+                  {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-yellow-400" />)}
                 </div>
               </div>
             </motion.div>

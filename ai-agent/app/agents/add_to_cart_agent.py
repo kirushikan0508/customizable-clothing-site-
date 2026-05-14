@@ -29,13 +29,15 @@ class AddToCartAgent:
         system_instruction = f"""
         You are an Add-to-Cart assistant. The user wants to add an item to their cart.
         Recent products shown: {last_products}
-        Identify the product ID and quantity from the user's message: '{context.message}'
+        Identify the product ID, quantity, and size from the user's message: '{context.message}'
+        Sizes are usually S, M, L, XL, XXL. If not specified, try to find it in the message or default to 'M'.
         If multiple products could match, pick the most relevant one.
         """
         
         class CartItemResolution(BaseModel):
             product_id: Optional[str] = Field(description="The resolved product ID")
             quantity: int = Field(default=1, description="The requested quantity")
+            size: str = Field(default="M", description="The requested size (S, M, L, XL, etc.)")
             
         try:
             resolution = gemini_service.generate_structured_content(context.message, CartItemResolution, system_instruction)
@@ -46,7 +48,12 @@ class AddToCartAgent:
                     action_taken="ambiguous_reference"
                 )
                 
-            response = await express_client.add_to_cart(resolution.product_id, resolution.quantity, auth_token=context.auth_token)
+            response = await express_client.add_to_cart(
+                resolution.product_id, 
+                resolution.quantity, 
+                size=resolution.size,
+                auth_token=context.auth_token
+            )
             
             if "error" not in response:
                 success_instruction = "Politely confirm that the item was successfully added to the cart."
@@ -57,8 +64,9 @@ class AddToCartAgent:
                     action_taken="add_to_cart"
                 )
             else:
+                error_msg = response.get('error') or "Unknown error from server"
                 return AgentResult(
-                    response_message=f"There was an issue adding to cart: {response['error']}",
+                    response_message=f"There was an issue adding that to your cart: {error_msg}",
                     action_taken="error"
                 )
         except Exception as e:

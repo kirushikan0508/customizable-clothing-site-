@@ -132,3 +132,29 @@
   transform: translateY(0);
   transition: opacity 0.3s, transform 0.3s;
 }
+
+/* Hero Section Specifics */
+.hero-bg-text {
+  font-family: 'Anton', sans-serif;
+  color: rgba(255, 255, 255, 0.08);
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.hero-script-text {
+  font-family: 'Caveat', cursive;
+  color: #E7D7C9;
+  line-height: 1;
+}
+
+.hero-glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+.hero-gradient-brown {
+  background: radial-gradient(circle at center, #5C4033 0%, #2D1E17 100%);
+}
