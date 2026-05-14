@@ -61,6 +61,21 @@ class ExpressClient:
                 logger.error(f"Error fetching cart: {e}")
                 return {"items": [], "totalPrice": 0}
 
+    async def get_profile(self, auth_token: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.base_url}/users/profile",
+                    headers=self._get_headers(auth_token),
+                    timeout=self.timeout
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data.get("user")
+            except Exception as e:
+                logger.error(f"Error fetching profile: {e}")
+                return None
+
     async def add_to_cart(self, product_id: str, quantity: int = 1, size: Optional[str] = None, auth_token: Optional[str] = None) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             try:
