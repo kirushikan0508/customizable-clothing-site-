@@ -27,6 +27,7 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Generate or retrieve session ID
@@ -39,7 +40,12 @@ export default function ChatPage() {
   }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
@@ -144,7 +150,7 @@ export default function ChatPage() {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
             <AnimatePresence initial={false}>
               {messages.map((message) => (
                 <motion.div

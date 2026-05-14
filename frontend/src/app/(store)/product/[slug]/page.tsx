@@ -9,6 +9,7 @@ import { Heart, ShoppingBag, Minus, Plus, Star, Truck, RotateCcw, Shield, Chevro
 import toast from "react-hot-toast";
 import ProductCard from "@/components/ui/ProductCard";
 import StarRating from "@/components/ui/StarRating";
+import ReviewForm from "@/components/ui/ReviewForm";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
@@ -284,7 +285,25 @@ export default function ProductDetailPage() {
               {activeTab === "description" ? (
                 <p className="text-sm text-muted leading-relaxed">{product.description}</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Review Form */}
+                  {isAuthenticated && (
+                    <ReviewForm 
+                      productId={product._id} 
+                      onReviewAdded={(review) => {
+                        setReviews([review, ...reviews]);
+                        setProduct({ ...product, numReviews: product.numReviews + 1 });
+                      }} 
+                    />
+                  )}
+                  {!isAuthenticated && (
+                    <div className="bg-surface p-4 rounded-lg text-center">
+                      <p className="text-sm text-muted mb-2">Login to write a review</p>
+                      <Link href="/login" className="btn-secondary text-xs py-2 px-6">Login</Link>
+                    </div>
+                  )}
+
+                  {/* Reviews List */}
                   {reviews.length > 0 ? reviews.map((r) => (
                     <div key={r._id} className="border-b border-border pb-4">
                       <div className="flex items-center gap-3 mb-2">
@@ -294,7 +313,7 @@ export default function ProductDetailPage() {
                       </div>
                       <p className="text-sm text-muted">{r.comment}</p>
                     </div>
-                  )) : <p className="text-sm text-muted">No reviews yet.</p>}
+                  )) : <p className="text-sm text-muted">No reviews yet. Be the first to review!</p>}
                 </div>
               )}
             </div>
