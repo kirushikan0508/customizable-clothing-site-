@@ -1,8 +1,8 @@
-# FLAVOUR — Fashion eCommerce Platform
+# GENTRIX — Premium Streetwear eCommerce & AI Shopping Assistant
 
-A complete production-ready fashion eCommerce platform for boys & girls clothing built with modern technologies.
+A complete production-ready fashion eCommerce platform tailored for premium streetwear, featuring a cutting-edge AI shopping assistant.
 
-![FLAVOUR](https://picsum.photos/seed/flavour/1200/400)
+![GENTRIX](https://picsum.photos/seed/gentrix/1200/400)
 
 ## 🚀 Tech Stack
 
@@ -10,7 +10,7 @@ A complete production-ready fashion eCommerce platform for boys & girls clothing
 - **Next.js 15** (App Router)
 - **React 19** + **TypeScript**
 - **Tailwind CSS** v4
-- **Framer Motion** — Animations
+- **Framer Motion** — Smooth animations and 3D-oriented aesthetics
 - **Zustand** — State management
 - **Axios** — HTTP client
 - **Recharts** — Admin charts
@@ -23,57 +23,72 @@ A complete production-ready fashion eCommerce platform for boys & girls clothing
 - **JWT** — Authentication
 - **Bcrypt** — Password hashing
 - **Multer** + **Cloudinary** — Image uploads
-- **Zod** — Validation
+- **Zod** — Data validation
+
+### AI Agent
+- **Python** + **FastAPI**
+- **Google GenAI** — Advanced natural language processing for shopping assistance
+- **PyMongo** — Direct database queries for product search
+- **Pydantic** — Data validation and settings management
 
 ## 📁 Project Structure
 
 ```
-clothing2/
-├── backend/
+clothing-agent-main/
+├── ai-agent/            # FastAPI Python backend for AI Assistant
+│   ├── app/             # Agent logic, routes, and tools
+│   ├── requirements.txt # Python dependencies
+│   └── .env             # AI agent configuration
+│
+├── backend/             # Express.js Node Backend
 │   ├── config/          # DB & Cloudinary config
 │   ├── controllers/     # Route handlers
-│   ├── middleware/       # Auth, error, upload, validation
-│   ├── models/          # Mongoose schemas
+│   ├── middleware/      # Auth, error, upload, validation
+│   ├── models/          # Mongoose schemas (User, Product, Order, Review)
 │   ├── routes/          # API routes
-│   ├── utils/           # Helpers & seeder
 │   └── server.js        # Entry point
 │
-├── frontend/
+├── frontend/            # Next.js React Frontend
 │   └── src/
-│       ├── app/
-│       │   ├── (auth)/      # Login, Register, Forgot Password
-│       │   ├── (store)/     # Home, Shop, Product, Cart, Checkout
-│       │   ├── admin/       # Admin Dashboard
-│       │   └── profile/     # User Profile
-│       ├── components/
-│       │   ├── layout/      # Navbar, Footer
-│       │   ├── sections/    # Hero, Categories, ProductSection
-│       │   └── ui/          # ProductCard, Skeleton, StarRating
-│       ├── hooks/           # useDebounce
-│       ├── lib/             # axios, utils
-│       ├── store/           # Zustand stores
-│       └── types/           # TypeScript interfaces
+│       ├── app/         # App router (auth, store, admin, profile)
+│       ├── components/  # Reusable UI, layout, and section components
+│       ├── store/       # Zustand state management
+│       └── types/       # TypeScript definitions
 ```
 
 ## 🛠️ Installation
 
 ### Prerequisites
 - Node.js 18+
+- Python 3.10+
 - MongoDB Atlas account (or local MongoDB)
-- Cloudinary account (optional, for image uploads)
+- Cloudinary account (for image uploads)
+- Google Gemini API Key (for AI agent)
 
-### 1. Clone & Install
+### 1. Clone & Install Dependencies
 
+**Backend:**
 ```bash
-# Backend
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI and secrets
+```
 
-# Frontend
-cd ../frontend
+**Frontend:**
+```bash
+cd frontend
 npm install
+cp .env.example .env.local
+```
+
+**AI Agent:**
+```bash
+cd ai-agent
+python -m venv venv
+# Windows: venv\Scripts\activate
+# Mac/Linux: source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
 ### 2. Configure Environment
@@ -94,6 +109,13 @@ CLOUDINARY_API_SECRET=your_api_secret
 **Frontend `.env.local`:**
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_AI_AGENT_URL=http://localhost:8000
+```
+
+**AI Agent `.env`:**
+```env
+GEMINI_API_KEY=your_google_genai_api_key
+MONGODB_URI=mongodb+srv://YOUR_CONNECTION_STRING
 ```
 
 ### 3. Seed Database
@@ -103,49 +125,46 @@ cd backend
 npm run seed
 ```
 
-This creates:
-- **Admin:** admin@flavour.com / admin123
-- **User:** john@example.com / password123
-- **30 products** across 5 categories
-- **3 coupon codes** (WELCOME10, FLAT200, SUMMER25)
-
 ### 4. Run Development Servers
 
+You will need three terminal windows to run all services:
+
 ```bash
-# Terminal 1 — Backend
+# Terminal 1 — Backend (Node.js)
 cd backend
 npm run dev
 
-# Terminal 2 — Frontend
+# Terminal 2 — AI Agent (FastAPI)
+cd ai-agent
+venv\Scripts\activate # or source venv/bin/activate
+uvicorn app.main:app --reload
+
+# Terminal 3 — Frontend (Next.js)
 cd frontend
 npm run dev
 ```
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:5000
+- AI Agent API: http://localhost:8000
 
 ## 🎯 Features
 
 ### Customer Features
-- 🔐 JWT Authentication (Register/Login/Logout)
-- 🏠 Animated Home Page with Hero, Categories, Featured Products
-- 🛍️ Shop with Filters (Category, Gender, Size, Price, Color)
-- 📄 Product Detail with Image Zoom, Size/Color Picker, Reviews
-- 🛒 Cart with Quantity Management
-- 💳 Checkout with COD (Cash on Delivery)
-- 🎟️ Coupon System
-- ❤️ Wishlist
-- 👤 User Profile, Addresses, Order History
+- 🤖 **AI Shopping Assistant**: Natural language product search, personalized recommendations, and direct add-to-cart capabilities.
+- 🏠 **Premium UI**: Glassmorphism, 3D-oriented streetwear aesthetics, and dynamic animations.
+- 🛍️ **Shop & Filtering**: Browse products by category, gender, size, price, and color.
+- ⭐ **Reviews & Ratings**: Real user feedback system displayed dynamically on product pages and home testimonials.
+- 🛒 **Advanced Cart**: State management, size/color validation, and seamless checkout flow.
+- 🔐 **Authentication**: Secure JWT-based user login and registration.
+- 👤 **Profile Management**: Order history, saved addresses, and account settings.
 
 ### Admin Dashboard
-- 📊 Dashboard with Revenue Charts, Order Stats
-- 📦 Product Management (CRUD with Images, Sizes, Colors)
-- 📋 Order Management with Status Updates
-- 👥 Customer Management
-- 📁 Category Management
-- 📈 Analytics (Revenue, Orders, Top Customers)
-- 🎫 Coupon Management
-- ⚙️ Store Settings
+- 📊 **Analytics**: Real-time revenue charts and order statistics.
+- 📦 **Product Management**: Full CRUD operations, variant handling (sizes, colors), and multi-image uploads.
+- 📋 **Order Management**: Track and update order statuses.
+- 👥 **Customer & Review Management**: Oversee platform interactions.
+- 🎫 **Coupon System**: Create and manage discount codes.
 
 ## 🚢 Deployment
 
@@ -155,25 +174,14 @@ cd frontend
 npx vercel
 ```
 
-### Backend → Render
-1. Push to GitHub
-2. Create new Web Service on Render
-3. Set build command: `npm install`
-4. Set start command: `npm start`
-5. Add environment variables
+### Backend → Render / Railway
+1. Set start command: `npm start`
+2. Add necessary environment variables (MongoDB, Cloudinary, JWT).
 
-## 📝 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/auth/register | Register user |
-| POST | /api/auth/login | Login |
-| POST | /api/auth/logout | Logout |
-| GET | /api/products | List products |
-| GET | /api/products/:slug | Product detail |
-| POST | /api/cart | Add to cart |
-| POST | /api/orders | Create order |
-| GET | /api/analytics/dashboard | Admin stats |
+### AI Agent → Render / Railway
+1. Set build command: `pip install -r requirements.txt`
+2. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+3. Add environment variables (Gemini API Key, MongoDB URI).
 
 ## 📄 License
 
