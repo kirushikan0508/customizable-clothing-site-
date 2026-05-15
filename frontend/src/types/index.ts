@@ -1,6 +1,7 @@
 // ==================== User Types ====================
 export interface IAddress {
   _id?: string;
+  label?: string;
   fullName: string;
   phone: string;
   street: string;
