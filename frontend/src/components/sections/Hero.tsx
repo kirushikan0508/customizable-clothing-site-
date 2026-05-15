@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, Variants } from "framer-motion";
 import { Star, ArrowRight, Sparkles, Zap, ShoppingBag } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 
-const textReveal = {
+const textReveal: Variants = {
   hidden: { y: "100%", opacity: 0 },
   visible: (i: number) => ({
     y: "0%",
@@ -14,7 +14,7 @@ const textReveal = {
   }),
 };
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { y: 40, opacity: 0 },
   visible: (i: number) => ({
     y: 0,
