@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, ArrowLeft, Image as ImageIcon, Save, Tag, DollarSign, Package as PackageIcon, Check, Upload, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
@@ -17,11 +17,11 @@ const defaultColors = [
   { name: "Pink", hex: "#EC4899" }, { name: "Beige", hex: "#D2B48C" },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
 };

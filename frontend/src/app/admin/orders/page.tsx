@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Eye, Filter, ShoppingBag } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "@/lib/axios";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
@@ -21,11 +21,11 @@ const getStatusStyles = (status: OrderStatus) => {
   }
 };
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
 };
